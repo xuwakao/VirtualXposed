@@ -4,7 +4,6 @@ import android.os.IInterface;
 
 import com.lody.virtual.client.hook.base.MethodInvocationProxy;
 import com.lody.virtual.client.hook.base.MethodInvocationStub;
-import com.lody.virtual.client.hook.base.ReplaceCallingPkgMethodProxy;
 
 /**
  * @author Lody
@@ -19,6 +18,7 @@ public class WindowSessionPatch extends MethodInvocationProxy<MethodInvocationSt
 	public void onBindMethods() {
 		addMethodProxy(new BaseMethodProxy("add"));
 		addMethodProxy(new BaseMethodProxy("addToDisplay"));
+        addMethodProxy(new BaseMethodProxy("addToDisplayAsUser"));
 		addMethodProxy(new BaseMethodProxy("addToDisplayWithoutInputChannel"));
 		addMethodProxy(new BaseMethodProxy("addWithoutInputChannel"));
 		addMethodProxy(new BaseMethodProxy("relayout"));
