@@ -3,6 +3,7 @@ package mirror.android.content.pm;
 import android.content.pm.ApplicationInfo;
 
 import mirror.RefClass;
+import mirror.RefInt;
 import mirror.RefObject;
 
 public class ApplicationInfoN {
@@ -11,4 +12,5 @@ public class ApplicationInfoN {
     public static RefObject<String> deviceEncryptedDataDir;
     public static RefObject<String> credentialProtectedDataDir;
     public static RefObject<String> credentialEncryptedDataDir;
+    public static RefInt networkSecurityConfigRes;
 }

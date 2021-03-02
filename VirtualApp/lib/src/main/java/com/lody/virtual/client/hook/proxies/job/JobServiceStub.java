@@ -9,6 +9,7 @@ import android.os.Build;
 import com.lody.virtual.client.hook.base.BinderInvocationProxy;
 import com.lody.virtual.client.hook.base.MethodProxy;
 import com.lody.virtual.client.ipc.VJobScheduler;
+import com.lody.virtual.helper.compat.ParceledListSliceCompat;
 import com.lody.virtual.helper.utils.ComponentUtils;
 
 import java.lang.reflect.Method;
@@ -32,7 +33,6 @@ public class JobServiceStub extends BinderInvocationProxy {
 	protected void onBindMethods() {
 		super.onBindMethods();
 		addMethodProxy(new schedule());
-		addMethodProxy(new getAllPendingJobs());
 		addMethodProxy(new cancelAll());
 		addMethodProxy(new cancel());
 
@@ -41,6 +41,12 @@ public class JobServiceStub extends BinderInvocationProxy {
 		}
 		if (Build.VERSION.SDK_INT >= 26) {
 			addMethodProxy(new enqueue());
+		}
+
+		if (Build.VERSION.SDK_INT >= 30) {
+			addMethodProxy(new getAllPendingJobsR());
+		} else {
+			addMethodProxy(new getAllPendingJobs());
 		}
 	}
 
@@ -105,6 +111,19 @@ public class JobServiceStub extends BinderInvocationProxy {
 		@Override
 		public Object call(Object who, Method method, Object... args) throws Throwable {
 			return VJobScheduler.get().getAllPendingJobs();
+		}
+	}
+
+	private class getAllPendingJobsR extends MethodProxy {
+
+		@Override
+		public String getMethodName() {
+			return "getAllPendingJobs";
+		}
+
+		@Override
+		public Object call(Object who, Method method, Object... args) throws Throwable {
+			return ParceledListSliceCompat.create(VJobScheduler.get().getAllPendingJobs());
 		}
 	}
 

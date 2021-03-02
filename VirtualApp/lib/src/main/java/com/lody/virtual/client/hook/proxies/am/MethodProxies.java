@@ -360,11 +360,89 @@ class MethodProxies {
 
         @Override
         public boolean isEnable() {
-            return isAppProcess();
+            return isAppProcess() && Build.VERSION.SDK_INT < 30;
         }
 
     }
 
+
+    static class GetIntentSenderWithFeature extends MethodProxy {
+
+        @Override
+        public String getMethodName() {
+            return "getIntentSenderWithFeature";
+        }
+
+        @Override
+        public Object call(Object who, Method method, Object... args) throws Throwable {
+            String creator = (String) args[1];
+            String[] resolvedTypes = (String[]) args[7];
+            int type = (int) args[0];
+            int flags = (int) args[8];
+            if (args[6] instanceof Intent[]) {
+                Intent[] intents = (Intent[]) args[6];
+                for (int i = 0; i < intents.length; i++) {
+                    Intent intent = intents[i];
+                    if (resolvedTypes != null && i < resolvedTypes.length) {
+                        intent.setDataAndType(intent.getData(), resolvedTypes[i]);
+                    }
+                    Intent targetIntent = redirectIntentSender(type, creator, intent);
+                    if (targetIntent != null) {
+                        intents[i] = targetIntent;
+                    }
+                }
+            }
+            args[8] = flags;
+            args[1] = getHostPkg();
+            // Force userId to 0
+            if (args[args.length - 1] instanceof Integer) {
+                args[args.length - 1] = 0;
+            }
+            IInterface sender = (IInterface) method.invoke(who, args);
+            if (sender != null && creator != null) {
+                VActivityManager.get().addPendingIntent(sender.asBinder(), creator);
+            }
+            return sender;
+        }
+
+        private Intent redirectIntentSender(int type, String creator, Intent intent) {
+            Intent newIntent = intent.cloneFilter();
+            switch (type) {
+                case ActivityManagerCompat.INTENT_SENDER_ACTIVITY: {
+                    ComponentInfo info = VirtualCore.get().resolveActivityInfo(intent, VUserHandle.myUserId());
+                    if (info != null) {
+                        newIntent.setClass(getHostContext(), StubPendingActivity.class);
+                        newIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    }
+                }
+                break;
+                case ActivityManagerCompat.INTENT_SENDER_SERVICE: {
+                    ComponentInfo info = VirtualCore.get().resolveServiceInfo(intent, VUserHandle.myUserId());
+                    if (info != null) {
+                        newIntent.setClass(getHostContext(), StubPendingService.class);
+                    }
+                }
+                break;
+                case ActivityManagerCompat.INTENT_SENDER_BROADCAST: {
+                    newIntent.setClass(getHostContext(), StubPendingReceiver.class);
+                }
+                break;
+                default:
+                    return null;
+            }
+            newIntent.putExtra("_VA_|_user_id_", VUserHandle.myUserId());
+            newIntent.putExtra("_VA_|_intent_", intent);
+            newIntent.putExtra("_VA_|_creator_", creator);
+            newIntent.putExtra("_VA_|_from_inner_", true);
+            return newIntent;
+        }
+
+        @Override
+        public boolean isEnable() {
+            return isAppProcess() && Build.VERSION.SDK_INT >= 30;
+        }
+
+    }
 
     static class OverridePendingTransition extends MethodProxy {
 

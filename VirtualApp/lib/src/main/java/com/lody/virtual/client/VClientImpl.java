@@ -68,6 +68,7 @@ import mirror.android.app.ContextImpl;
 import mirror.android.app.IActivityManager;
 import mirror.android.app.LoadedApk;
 import mirror.android.content.ContentProviderHolderOreo;
+import mirror.android.content.pm.ApplicationInfoN;
 import mirror.android.providers.Settings;
 import mirror.android.renderscript.RenderScriptCacheDir;
 import mirror.android.view.HardwareRenderer;
@@ -329,6 +330,10 @@ public final class VClientImpl extends IVClient.Stub {
             applicationInfo.splitNames = new String[1];
         }
 
+        //NetworkSecurityConfigProvider#handleNewApplication
+        if(Build.VERSION.SDK_INT >= 30)  {
+            ApplicationInfoN.networkSecurityConfigRes.set(applicationInfo, 0);
+        }
 
         boolean enableXposed = VirtualCore.get().isXposedEnabled();
         if (enableXposed) {
